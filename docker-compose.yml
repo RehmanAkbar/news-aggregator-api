@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
   app:
     build:
@@ -6,10 +6,11 @@ services:
       dockerfile: Dockerfile
     image: news-api
     container_name: news-api
-    # restart: unless-stopped
+    restart: unless-stopped
     working_dir: /var/www
     volumes:
       - ./:/var/www
+      - /var/www/vendor
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - app-network
@@ -29,6 +30,7 @@ services:
       - "8000:80"
     volumes:
       - ./:/var/www
+      - /var/www/vendor # Add this line
       - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
     depends_on:
       - app

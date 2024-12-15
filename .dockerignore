@@ -1,0 +1,10 @@
+.git
+.gitignore
+.dockerignore
+node_modules
+npm-debug.log
+yarn.lock
+.env
+docker-compose.yml
+Dockerfile
+README.md
