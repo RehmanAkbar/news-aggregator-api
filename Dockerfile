@@ -21,23 +21,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Copy the entire application (including artisan and vendor if they exist)
 COPY . .
 
-# Install dependencies and generate optimized autoload files
-RUN composer install  --no-interaction --prefer-dist
-
-# Copy and set up entrypoint
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Expose PHP-FPM port
 EXPOSE 9000
 
-# Set entrypoint
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
-# Default command
-CMD ["php-fpm"]
+ENTRYPOINT ["php-fpm"]
