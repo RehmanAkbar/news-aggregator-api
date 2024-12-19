@@ -2,8 +2,11 @@
 
 namespace App\Exceptions;
 
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 class Handler extends ExceptionHandler
 {
@@ -23,8 +26,33 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
-        $this->reportable(function (Throwable $e) {
-            //
+        $this->renderable(function (ValidationException $e) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => $e->errors(),
+            ], 422);
+        });
+
+        $this->renderable(function (AuthenticationException $e) {
+            return response()->json([
+                'message' => $e->getMessage() ?: 'Unauthenticated.',
+            ], 401);
+        });
+
+        $this->renderable(function (HttpException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], $e->getStatusCode());
+        });
+
+        $this->renderable(function (Throwable $e) {
+            if (config('app.debug')) {
+                throw $e;
+            }
+
+            return response()->json([
+                'message' => 'An unexpected error occurred.',
+            ], 500);
         });
     }
 }
