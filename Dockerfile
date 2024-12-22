@@ -1,33 +1,34 @@
-FROM php:8.2-fpm
+FROM php:8.2-fpm-alpine
 
-# Set the working directory
-WORKDIR /var/www
+WORKDIR /var/www/html
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
+RUN apk update && apk add --no-cache \
+    git \
     curl \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libonig-dev \
-    libxml2-dev \
+    libzip-dev \
     zip \
     unzip \
-    git \
-    gosu \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    oniguruma-dev \
+    icu-dev \
+    libxml2-dev \
+    bash \
+    shadow && \
+    docker-php-ext-install pdo_mysql mbstring zip intl xml
 
 # Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Copy the entire application (including artisan and vendor if they exist)
-COPY . .
+# Copy PHP configuration
+# COPY php.ini /usr/local/etc/php/conf.d/php.ini
 
+# At this point, the www-data user already exists in the official PHP-FPM image
+# No need to adduser/addgroup. Just ensure correct ownership:
+RUN chown -R www-data:www-data /var/www/html
 
-# Expose PHP-FPM port
-EXPOSE 9000
+# Switch to non-root user
+USER www-data
 
-ENTRYPOINT ["php-fpm"]
+# COPY fpm-pool.conf /usr/local/etc/php-fpm.d/zzz-custom-pool.conf
+
+CMD ["php-fpm"]
