@@ -19,6 +19,27 @@ class NYTimesAPIAdapter extends BaseNewsAPIAdapter
 
     protected function parseResponse($response): ?array
     {
-        return $response->json('results');
+        $results = $response->json('results');
+        if (!is_array($results)) {
+            return null;
+        }
+
+        $parsedArticles = [];
+
+        foreach ($results as $item) {
+            $parsedArticles[] = [
+                'title'        => $item['title']            ?? '',
+                'content'      => $item['abstract']         ?? '',
+                'author'       => $item['byline']           ?? '',
+                'image_url'    => isset($item['multimedia'][0]['url'])
+                                ? $item['multimedia'][0]['url']
+                                : null,
+                'published_at' => $item['published_date']   ?? now(),
+                'url'          => $item['url']              ?? null,
+            ];
+        }
+
+        return $parsedArticles;
     }
+
 }
