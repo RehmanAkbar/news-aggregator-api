@@ -7,18 +7,27 @@ services:
     container_name: news-api
     restart: unless-stopped
     working_dir: /var/www/html
+    expose:
+      - "9000"
     volumes:
       - ./:/var/www/html
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
+      - supervisor-logs:/var/log/supervisor
     networks:
       - app-network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-        DB_HOST: db
-        DB_DATABASE: news_db
-        DB_USERNAME: news_user
-        DB_PASSWORD: secret
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: news_db
+      DB_USERNAME: news_user
+      DB_PASSWORD: secret
+    user: www-data
+    entrypoint: ["/var/www/html/docker-entrypoint.sh"]
 
   webserver:
     image: nginx:alpine
@@ -50,8 +59,12 @@ services:
       - ./mysql/my.cnf:/etc/mysql/my.cnf
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
-# add phpmyadmin:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: news-phpmyadmin
@@ -63,6 +76,8 @@ services:
       - "8080:80"
     networks:
       - app-network
+    depends_on:
+      - db
 
 networks:
   app-network:
@@ -70,4 +85,6 @@ networks:
 
 volumes:
   dbdata:
+    driver: local
+  supervisor-logs:
     driver: local

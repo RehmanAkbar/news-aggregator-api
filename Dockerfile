@@ -13,22 +13,31 @@ RUN apk update && apk add --no-cache \
     icu-dev \
     libxml2-dev \
     bash \
-    shadow && \
+    shadow \
+    supervisor \
+    mysql-client && \
     docker-php-ext-install pdo_mysql mbstring zip intl xml
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Copy PHP configuration
-# COPY php.ini /usr/local/etc/php/conf.d/php.ini
+# Create supervisor log directory
+RUN mkdir -p /var/log/supervisor
 
-# At this point, the www-data user already exists in the official PHP-FPM image
-# No need to adduser/addgroup. Just ensure correct ownership:
-RUN chown -R www-data:www-data /var/www/html
+# Set up users and permissions
+RUN usermod -u 1000 www-data && \
+    groupmod -g 1000 www-data && \
+    chown -R www-data:www-data /var/www/html && \
+    chown -R www-data:www-data /var/log/supervisor
 
-# Switch to non-root user
+# Give necessary permissions to supervisor directory
+RUN mkdir -p /var/run && chown -R www-data:www-data /var/run
+
+# Copy supervisor configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Switch to www-data user
 USER www-data
 
-# COPY fpm-pool.conf /usr/local/etc/php-fpm.d/zzz-custom-pool.conf
-
-CMD ["php-fpm"]
+# Keep the container running
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
