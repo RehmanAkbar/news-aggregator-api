@@ -58,7 +58,6 @@ class SyncArticlesJob implements ShouldQueue, ShouldBeUnique
     public function __construct(
         protected readonly bool $force = false
     ) {
-        $this->onQueue('articles');
     }
 
     /**
@@ -66,7 +65,7 @@ class SyncArticlesJob implements ShouldQueue, ShouldBeUnique
      */
     public function uniqueId(): string
     {
-        return 'sync_articles';
+        return 'sync_articles_' . time();
     }
 
     /**

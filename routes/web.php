@@ -16,3 +16,20 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/articles/fetch', function () {
+    try {
+        
+        \App\Jobs\SyncArticlesJob::dispatch(true);
+        
+        return response()->json([
+            'message' => 'Article sync job has been dispatched successfully'
+        ]);
+    } catch (\Exception $e) {
+        $message = "Error dispatching article sync job: {$e->getMessage()}";
+        
+        return response()->json([
+            'message' => $message
+        ], 500);
+    }
+});
