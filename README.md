@@ -1,66 +1,256 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# News Aggregator API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A RESTful API built with Laravel for aggregating and managing news articles from multiple sources. The API supports user preferences, article categorization, and personalized news feeds.
 
-## About Laravel
+## Table of Contents
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Docker Setup](#docker-setup)
+- [API Documentation](#api-documentation)
+- [Development Guidelines](#development-guidelines)
+- [Testing](#testing)
+- [Maintenance](#maintenance)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- User authentication and authorization
+- Article management with filtering and search
+- User preferences for personalized news feeds
+- Multiple news source integration (NewsAPI, Guardian, NYTimes)
+- Article categorization
+- Background job processing for article syncing
+- Docker containerization
+- API response formatting and error handling
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Requirements
 
-## Learning Laravel
+- Docker and Docker Compose
+- PHP 8.2+
+- Composer
+- MySQL 8.0
+- Git
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Installation
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+1. Clone the repository:
+```bash
+git clone https://your-repository-url.git
+cd news-api
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. Copy environment file:
+```bash
+cp .env.example .env
+```
 
-## Laravel Sponsors
+3. Configure your .env file with the following required variables:
+```env
+# Database
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=news_db
+DB_USERNAME=news_user
+DB_PASSWORD=secret
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# News API Keys
+NEWSAPI_KEY=your_newsapi_key
+GUARDIAN_API_KEY=your_guardian_api_key
+NYTIMES_API_KEY=your_nytimes_api_key
+```
 
-### Premium Partners
+## Docker Setup
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+1. Build and start the containers:
+```bash
+docker-compose up -d --build
+```
+
+2. Install dependencies:
+```bash
+docker-compose exec app composer install
+```
+
+3. Generate application key:
+```bash
+docker-compose exec app php artisan key:generate
+```
+
+4. Run migrations and seeders:
+```bash
+docker-compose exec app php artisan migrate --seed
+```
+
+The application will be available at: http://localhost:8000
+
+PHPMyAdmin will be available at: http://localhost:8080
+- Username: news_user
+- Password: secret
+
+### Container Structure
+- **app**: PHP-FPM container with the Laravel application
+- **webserver**: Nginx web server
+- **db**: MySQL database
+- **phpmyadmin**: Database management tool
+
+### Useful Docker Commands
+```bash
+# View container logs
+docker-compose logs -f
+
+# Stop containers
+docker-compose down
+
+# Rebuild containers
+docker-compose up -d --build
+
+# Access container shell
+docker-compose exec app sh
+```
+
+## API Documentation
+
+### Authentication Endpoints
+
+#### Register User
+```http
+POST /api/register
+Content-Type: application/json
+
+{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "password",
+    "password_confirmation": "password"
+}
+```
+
+#### Login
+```http
+POST /api/login
+Content-Type: application/json
+
+{
+    "email": "john@example.com",
+    "password": "password"
+}
+```
+
+### Article Endpoints
+
+#### List Articles
+```http
+GET /api/articles
+Authorization: Bearer {token}
+```
+
+Query Parameters:
+- `keyword`: Search in title and content
+- `date_from`: Start date (YYYY-MM-DD)
+- `date_to`: End date (YYYY-MM-DD)
+- `category_id`: Filter by category
+- `source_id`: Filter by source
+- `author`: Filter by author
+- `per_page`: Results per page (default: 15)
+
+#### Get Single Article
+```http
+GET /api/articles/{id}
+Authorization: Bearer {token}
+```
+
+### User Preferences Endpoints
+
+#### Get Preferences
+```http
+GET /api/preferences
+Authorization: Bearer {token}
+```
+
+#### Update Preferences
+```http
+PUT /api/preferences
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "preferred_categories": [1, 2, 3],
+    "preferred_sources": [1, 2],
+    "preferred_authors": ["John Doe", "Jane Smith"]
+}
+```
+
+#### Get Personalized Feed
+```http
+GET /api/feed
+Authorization: Bearer {token}
+```
+
+## Development Guidelines
+
+### Code Structure
+- Controllers: `app/Http/Controllers`
+- Services: `app/Services`
+- Models: `app/Models`
+- Resources: `app/Http/Resources`
+- Requests: `app/Http/Requests`
+- Jobs: `app/Jobs`
+
+### Adding New Features
+1. Create necessary database migrations
+2. Create or update models
+3. Create service classes for business logic
+4. Create controller methods
+5. Create request validation classes
+6. Create API resources for response formatting
+7. Add routes in `routes/api.php`
+8. Add tests
+
+### Coding Standards
+- Follow PSR-12 coding standards
+- Use type hints and return types
+- Document classes and methods with PHPDoc
+- Use dependency injection
+- Keep controllers thin, put business logic in services
+- Use Laravel's built-in features and best practices
+
+## Testing
+
+Run tests using PHPUnit:
+```bash
+docker-compose exec app php artisan test
+```
+
+## Maintenance
+
+### Queue Worker
+The application uses Laravel's queue system for background jobs. The worker is managed by Supervisor in the Docker container.
+
+### Article Syncing
+Articles are synced periodically using the following command:
+```bash
+docker-compose exec app php artisan articles:fetch
+```
+
+To force sync regardless of the last sync time:
+```bash
+docker-compose exec app php artisan articles:fetch --force
+```
+
+### Logs
+Application logs are available in:
+- Laravel Log: `storage/logs/laravel.log`
+- Supervisor Logs: `storage/logs/supervisor/`
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the MIT License - see the LICENSE file for details.
