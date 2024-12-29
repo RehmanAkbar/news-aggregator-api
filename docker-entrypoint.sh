@@ -35,20 +35,21 @@ php artisan migrate --force
 echo "✅ Migrations completed!"
 
 echo "⏳ Running database seeders..."
-php artisan db:seed --force
+# php artisan db:seed --force
 echo "✅ Seeders completed!"
 
-# Storage link
-php artisan storage:link
+# Storage link (only if it doesn't exist)
+if [ ! -L public/storage ]; then
+    php artisan storage:link
+fi
 
 # Cache configuration and routes
 echo "⏳ Optimizing Laravel..."
-# php artisan config:cache
-# php artisan route:cache
-# php artisan view:cache
+php artisan optimize
 echo "✅ Laravel optimization completed!"
 
-# Clear existing pid if it exists
+# Clear existing pid and socket if they exist
+rm -f /tmp/supervisor.sock
 rm -f /var/run/supervisord.pid
 
 echo "🎉 Starting supervisor..."

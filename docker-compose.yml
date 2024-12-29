@@ -14,6 +14,7 @@ services:
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
       - ./supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
       - supervisor-logs:/var/log/supervisor
+      - supervisor-run:/var/run/supervisor
     networks:
       - app-network
     depends_on:
@@ -87,4 +88,6 @@ volumes:
   dbdata:
     driver: local
   supervisor-logs:
+    driver: local
+  supervisor-run:
     driver: local

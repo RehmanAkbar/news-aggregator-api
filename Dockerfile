@@ -21,23 +21,20 @@ RUN apk update && apk add --no-cache \
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Create supervisor log directory
-RUN mkdir -p /var/log/supervisor
-
-# Set up users and permissions
-RUN usermod -u 1000 www-data && \
-    groupmod -g 1000 www-data && \
-    chown -R www-data:www-data /var/www/html && \
+# Create necessary directories and set permissions
+RUN mkdir -p /var/log/supervisor && \
+    mkdir -p /tmp && \
+    chmod 777 /tmp && \
     chown -R www-data:www-data /var/log/supervisor
-
-# Give necessary permissions to supervisor directory
-RUN mkdir -p /var/run && chown -R www-data:www-data /var/run
 
 # Copy supervisor configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Switch to www-data user
-USER www-data
+# Copy and set permissions for entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Keep the container running
-CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Keep root as the user for supervisor
+USER root
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
