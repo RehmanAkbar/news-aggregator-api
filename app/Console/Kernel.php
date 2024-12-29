@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Jobs\SyncArticlesJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -12,7 +13,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+         // Schedule article syncing to run daily at midnight
+        $schedule->job(new SyncArticlesJob())
+            ->dailyAt('00:00')
+            ->onQueue('articles')
+            ->appendOutputTo(storage_path('logs/article-sync.log'));
     }
 
     /**
